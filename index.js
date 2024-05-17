@@ -1,8 +1,10 @@
 const morgan = require('morgan');
 const express = require('express');
 const app = express();
+const cors = require('cors');
 
 app.use(express.json())
+app.use(cors());
 
 // middleware to logging the request body
 morgan.token('reqBody', (req) => {
@@ -18,22 +20,22 @@ let personsData = [
     {
         "id": 1,
         "name": "Arto Hellas",
-        "number": "040-123456"
+        "phone": "040-123456"
     },
-    { 
+    {
         "id": 2,
         "name": "Ada Lovelace",
-        "number": "39-44-5323523"
+        "phone": "39-44-5323523"
     },
     {
         "id": 3,
         "name": "Dan Abramov",
-        "number": "12-43-234345"
+        "phone": "12-43-234345"
     },
     {
         "id": 4,
         "name": "Mary Poppendieck",
-        "number": "39-23-6423122"
+        "phone": "39-23-6423122"
     }
 ];
 
@@ -41,7 +43,7 @@ app.post('/api/persons', (req, res) => {
     const body = req.body
     const isDuplicated = personsData.some(p => p.name.toLowerCase() === body.name.toLowerCase());
 
-    if (!body.name || !body.number) {
+    if (!body.name || !body.phone) {
         return res.status(400).json({
             error: 'Bad request: The name or number is missing'
         })
@@ -54,7 +56,7 @@ app.post('/api/persons', (req, res) => {
     const person = {
         id: Math.floor(Math.random() * 100000),
         name: body.name,
-        number: body.number
+        phone: body.phone
     };
     personsData = personsData.concat(person);
     res.json(person)
@@ -89,11 +91,13 @@ app.get('/api/persons/:id', (req, res) => {
 app.delete('/api/persons/:id', (req, res) => {
     const id = Number(req.params.id);
     personsData = personsData.filter(p => p.id !== id);
-    res.redirect('/api/persons')
+    res.status(200).end();
 })
 
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
+
+
 
