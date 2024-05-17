@@ -16,9 +16,11 @@ Deployment: render.com
 ### Exercise 3.11 Phonebook backend
 
 - [x] Production build of my frontend, and add it to Render.com Internet application.
+      ![alt text](assets/dist-updated-deploy.png)
 
 - [x] Proxy added to frontend, still working locally (npm run dev).
       ![alt text](assets/frontend-proxy.png)
+      ![alt text](assets/single-page-app-onrender.png)
 
 ## Extra stapes:
 
@@ -27,3 +29,4 @@ Deployment: render.com
   "build:ui": "rm -rf dist && cd ../../part02/the-phonebook && npm run build && cp -r dist ../../part03/phonebook-exercise/",
   "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
   ```
+  ![alt text](assets/streamline-command.png)
