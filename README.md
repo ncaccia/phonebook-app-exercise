@@ -17,10 +17,10 @@ Deployment: render.com
 
 - [x] Production build of my frontend, and add it to Render.com Internet application.
       ![alt text](assets/dist-updated-deploy.png)
+      ![alt text](assets/single-page-app-onrender.png)
 
 - [x] Proxy added to frontend, still working locally (npm run dev).
       ![alt text](assets/frontend-proxy.png)
-      ![alt text](assets/single-page-app-onrender.png)
 
 ## Extra stapes:
 
