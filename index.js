@@ -1,7 +1,9 @@
+require('dotenv').config()
 const morgan = require('morgan');
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const Person = require('./models/person');
 
 app.use(express.json())
 app.use(cors());
@@ -40,56 +42,46 @@ let personsData = [
     }
 ];
 
-app.post('/api/persons', (req, res) => {
-    const body = req.body
-    const isDuplicated = personsData.some(p => p.name.toLowerCase() === body.name.toLowerCase());
-
-    if (!body.name || !body.phone) {
-        return res.status(400).json({
-            error: 'Bad request: The name or number is missing'
-        })
-    }
-    if (isDuplicated) {
-        return res.status(409).json({
-            error: 'Conflict: The name already exists in the phonebook'
-        })
-    }
-    const person = {
-        id: Math.floor(Math.random() * 100000),
-        name: body.name,
-        phone: body.phone
-    };
-    personsData = personsData.concat(person);
-    res.json(person)
+app.post('/api/people', (req, res) => {
+    const regex = new RegExp(req.body.name, 'i');
+    Person.findOne({ name: { $regex: regex } }).exec()
+        .then(result => {
+            if (!result) {
+                const person = new Person({
+                    name: req.body.name,
+                    phone: req.body.phone,
+                })
+                person.save().then((savedPerson) => {
+                    res.json(savedPerson);
+                })
+            } else {
+                return res.status(409).json({
+                    error: 'Conflict: The name already exists in the phonebook'
+                })
+            }
+        });
 })
 
-app.get('/api/persons', (req, res) => {
-    res.json(personsData);
+app.get('/api/people', (req, res) => {
+    Person.find({}).then(people => res.json(people));
 })
 
 app.get('/info', (req, res) => {
-    const phonebookCount = personsData.length
-    const timestamp = Date()
-    res.send(
-        `<p>
-        Phonebook has info for ${phonebookCount} people<br/>
-        ${timestamp}
-        </p>`
-    )
+    Person.find({}).then(people => {
+        const timestamp = Date();
+        const phonebookCount = people.length
+        res.send(
+            `<p>Phonebook has info for ${phonebookCount} people
+            <br/>${timestamp}</p>`
+        )
+    })
 })
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id);
-    const person = personsData.find(p => p.id === id);
-
-    if (person) {
-        res.json(person);
-    } else {
-        res.status(404).end();
-    }
+app.get('/api/people/:id', (req, res) => {
+    Person.findById(req.params.id).then(person => res.json(person))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/people/:id', (req, res) => {
     const id = Number(req.params.id);
     personsData = personsData.filter(p => p.id !== id);
     res.status(200).end();

@@ -31,7 +31,7 @@ mongoose.connect(url)
         console.log(' ');
         if (process.argv.length === 3) { // Condition === Only password passed
             return Person.find({})
-                .then(result => {
+                .then(result => { 
                     console.log('Phonebook:');
                     result.forEach(p => {
                         console.log(`${p.name} ${p.phone}`);
