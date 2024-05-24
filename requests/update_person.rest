@@ -1,0 +1,7 @@
+PUT http://localhost:3001/api/people/6650720205a523e281f79b91
+Content-Type: application/json
+
+{
+  "name": "Juana de arco",
+  "phone": "35-4444324"
+}

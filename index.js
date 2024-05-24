@@ -16,33 +16,10 @@ morgan.token('reqBody', (req) => {
     }
     return '';
 })
+
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :reqBody'))
 
-
-let personsData = [
-    {
-        "id": 1,
-        "name": "Arto Hellas",
-        "phone": "040-123456"
-    },
-    {
-        "id": 2,
-        "name": "Ada Lovelace",
-        "phone": "39-44-5323523"
-    },
-    {
-        "id": 3,
-        "name": "Dan Abramov",
-        "phone": "12-43-234345"
-    },
-    {
-        "id": 4,
-        "name": "Mary Poppendieck",
-        "phone": "39-23-6423122"
-    }
-];
-
-app.post('/api/people', (req, res) => {
+app.post('/api/people', (req, res, next) => {
     const regex = new RegExp(req.body.name, 'i');
     Person.findOne({ name: { $regex: regex } }).exec()
         .then(result => {
@@ -59,33 +36,72 @@ app.post('/api/people', (req, res) => {
                     error: 'Conflict: The name already exists in the phonebook'
                 })
             }
-        });
+        })
+        .catch(err => next(err));
 })
 
-app.get('/api/people', (req, res) => {
-    Person.find({}).then(people => res.json(people));
+app.get('/api/people', (req, res, next) => {
+    Person.find({})
+        .then(people => res.json(people))
+        .catch(err => next(err));
 })
 
-app.get('/info', (req, res) => {
-    Person.find({}).then(people => {
-        const timestamp = Date();
-        const phonebookCount = people.length
-        res.send(
-            `<p>Phonebook has info for ${phonebookCount} people
+app.get('/info', (req, res, next) => {
+    Person.find({})
+        .then(people => {
+            const timestamp = Date();
+            const phonebookCount = people.length
+            res.send(
+                `<p>Phonebook has info for ${phonebookCount} people
             <br/>${timestamp}</p>`
-        )
-    })
+            )
+        })
+        .catch(err => next(err));
 })
 
-app.get('/api/people/:id', (req, res) => {
-    Person.findById(req.params.id).then(person => res.json(person))
+app.get('/api/people/:id', (req, res, next) => {
+    Person.findById(req.params.id)
+        .then(person => res.json(person))
+        .catch(err => next(err));
 })
 
-app.delete('/api/people/:id', (req, res) => {
-    const id = Number(req.params.id);
-    personsData = personsData.filter(p => p.id !== id);
-    res.status(200).end();
+app.delete('/api/people/:id', (req, res, next) => {
+    Person.findByIdAndDelete(req.params.id)
+        .then(result => { res.status(204).end() })
+        .catch(err => next(err));
 })
+
+app.put('/api/people/:id', (req, res, next) => {
+    const body = req.body
+    const updatedPerson = {
+        name: body.name,
+        phone: body.phone,
+    }
+    console.log(updatedPerson);
+
+    Person.findByIdAndUpdate(req.params.id, updatedPerson, { new: true }) // if true, return the modified object, in this case the new person.
+        .then(updatedPerson => res.json(updatedPerson))
+        .catch(err => next(err));
+})
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - -
+
+const unknownEndpoint = (req, res, next) => {
+    res.status(404).send({ error: 'unknown endpoint' })
+};
+app.use(unknownEndpoint) // call the unknown endpoint error handler
+
+const errorHandler = (err, req, res, next) => {
+    console.log(err.message);
+
+    if (err.name === 'CastError') {
+        return res.status(400).send({ error: 'id not founded' })
+    }
+
+    next(err);
+}
+app.use(errorHandler) // call the error handler
 
 
 const PORT = process.env.PORT || 3001;
