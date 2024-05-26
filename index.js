@@ -20,21 +20,21 @@ morgan.token('reqBody', (req) => {
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :reqBody'))
 
 app.post('/api/people', (req, res, next) => {
-    const regex = new RegExp(req.body.name, 'i');
+    const regex = new RegExp(`^${req.body.name}$`, 'i');
     Person.findOne({ name: { $regex: regex } }).exec()
         .then(result => {
-            if (!result) {
+            if (!result || req.body.name === "") {
                 const person = new Person({
                     name: req.body.name,
                     phone: req.body.phone,
                 })
-                person.save().then((savedPerson) => {
-                    res.json(savedPerson);
-                })
+                person.save()
+                    .then((savedPerson) => {
+                        res.json(savedPerson);
+                    })
+                    .catch(err => next(err));
             } else {
-                return res.status(409).json({
-                    error: 'Conflict: The name already exists in the phonebook'
-                })
+                return res.status(409).json({ error: 'Conflict: The name already exists in the phonebook' });
             }
         })
         .catch(err => next(err));
@@ -72,15 +72,19 @@ app.delete('/api/people/:id', (req, res, next) => {
 })
 
 app.put('/api/people/:id', (req, res, next) => {
-    const body = req.body
-    const updatedPerson = {
-        name: body.name,
-        phone: body.phone,
-    }
-    console.log(updatedPerson);
-
-    Person.findByIdAndUpdate(req.params.id, updatedPerson, { new: true }) // if true, return the modified object, in this case the new person.
-        .then(updatedPerson => res.json(updatedPerson))
+    const { name, phone } = req.body;
+    Person.findByIdAndUpdate(req.params.id,
+        { name, phone },
+        { new: true, runValidators: true, context: 'query' }
+    )
+        .then(updatedPerson => {
+            if (!updatedPerson) {
+                console.log(`error: Person not found`);
+                res.status(404).json({ error: 'Person not found' })
+            } else {
+                res.json(updatedPerson)
+            }
+        })
         .catch(err => next(err));
 })
 
@@ -97,7 +101,11 @@ const errorHandler = (err, req, res, next) => {
 
     if (err.name === 'CastError') {
         return res.status(400).send({ error: 'id not founded' })
-    }
+    };
+
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({ error: err.message });
+    };
 
     next(err);
 }
