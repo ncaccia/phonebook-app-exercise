@@ -8,11 +8,16 @@
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:ui": "rm -rf dist && cd ../../part02/the-phonebook && npm run build && cp -r dist ../../part03/phonebook-exercise/",
-    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.3.0",
+    "@stylistic/eslint-plugin": "^2.1.0",
+    "eslint": "^9.3.0",
+    "globals": "^15.3.0",
     "nodemon": "^3.1.0"
   },
   "dependencies": {
